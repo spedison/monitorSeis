@@ -1,0 +1,9 @@
+url = link para analisar
+mail.host = smtp.gmail.com
+mail.port = 587
+mail.username = usuario do e-mail
+mail.password = senha usuario do e-mail
+mail.send_without_error = true
+mail.title_sucess = Titulo do teste de Sucesso.
+mail.title_failure = Titulo do teste de Falha
+mail.destinations = mail1@tre-sp.jus.br,mail2@mail.com,mail3...

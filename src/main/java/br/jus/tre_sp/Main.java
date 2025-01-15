@@ -31,6 +31,7 @@ public class Main {
     public void executeHttpRequest(){
         try {
             result = request.sendGet(testConfig.getUrl());
+            errorOnConnect = false;
         }catch (InterruptedException | IOException e){
             errorOnConnect = true;
             msgError
@@ -45,7 +46,7 @@ public class Main {
 
         emailSender = new EmailSender(testConfig.getMailHost(), testConfig.getMailPort(), testConfig.getMailUsername(), testConfig.getMailPassword());
 
-        if (errorOnConnect) {
+        if (errorOnConnect == null || errorOnConnect) {
             emailSender.sendEmail(
                     testConfig.getMailDestinations(),
                     testConfig.getMailTitleFailure(),
@@ -66,7 +67,7 @@ public class Main {
     }
 
     public void runScriptTest() throws IOException, IllegalArgumentException {
-        if (!errorOnConnect){
+        if (errorOnConnect != null && !errorOnConnect){
             Boolean sucess = executeScript.execute(result.getStatusCode(), result.getBody());
             if (sucess != null) {
                 errorOnConnect = !sucess;

@@ -16,6 +16,7 @@ public class TestHttpServerConfigure extends BasicConfigure{
     private final String mailDestinations;
     private final String mailTitleSucess;
     private final String mailTitleFailure;
+    private final String scriptTest;
 
     public TestHttpServerConfigure(String filename) throws IOException {
         super(filename);
@@ -29,6 +30,7 @@ public class TestHttpServerConfigure extends BasicConfigure{
         this.mailDestinations = properties.getProperty("mail.destinations");
         this.mailTitleSucess = properties.getProperty("mail.title_sucess", "Titulo de sucesso");
         this.mailTitleFailure = properties.getProperty("mail.title_failure", "Titulo de falha");
+        this.scriptTest= properties.getProperty("script.test", "default.groovy");
 
         if (url == null || mailHost == null || mailPort == null || mailUsername == null || mailPassword == null) {
             throw new IllegalArgumentException("Arquivo de configurações inválido.");

@@ -1,6 +1,7 @@
 package br.jus.tre_sp;
 
 import br.jus.tre_sp.sti.codes.seis.infra.EmailSender;
+import br.jus.tre_sp.sti.codes.seis.infra.ExecutorTest;
 import br.jus.tre_sp.sti.codes.seis.infra.HttpRequester;
 import br.jus.tre_sp.sti.codes.seis.infra.HttpResponseResult;
 import br.jus.tre_sp.sti.codes.seis.vo.TestHttpServerConfigure;
@@ -13,75 +14,95 @@ import java.nio.channels.UnresolvedAddressException;
 
 public class Main {
 
-    private static final Logger log = LoggerFactory.getLogger(Main.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(Main.class);
+
+    HttpRequester request = new HttpRequester();
+    HttpResponseResult result = null;
+    Boolean errorOnConnect = null;
+    StringBuilder msgError = new StringBuilder();
+    ExecutorTest executeScript;
+    TestHttpServerConfigure testConfig;
+    EmailSender emailSender ;
 
     public static void main(String[] args) throws IOException, InterruptedException {
+        (new Main()).execute(args);
+    }
+
+    public void executeHttpRequest(){
+        try {
+            result = request.sendGet(testConfig.getUrl());
+        }catch (InterruptedException | IOException e){
+            errorOnConnect = true;
+            msgError
+                    .append("Erro ao enviar requisição HTTP (Geral): ")
+                    .append(e.toString())
+                    .append("\n");
+            log.error("Erro ao enviar requisição HTTP (Geral): ", e);
+        }
+    }
+
+    public void sendMail(){
+
+        emailSender = new EmailSender(testConfig.getMailHost(), testConfig.getMailPort(), testConfig.getMailUsername(), testConfig.getMailPassword());
+
+        if (errorOnConnect) {
+            emailSender.sendEmail(
+                    testConfig.getMailDestinations(),
+                    testConfig.getMailTitleFailure(),
+                    "Ocorreu um erro ao conectar com o endereço: " + testConfig.getUrl()
+                            + " verifique : \n" + msgError.toString() + "\n"
+                            + "\n --> Checagens com erro    ::: \n" + executeScript.getMsgErrors()
+                            + "\n --> Checagens com sucesso ::: \n" + executeScript.getMsgOk()
+                            + "\n\n<FIM DA MENSAGEM>"
+            );
+        } else if (testConfig.getSendWithoutError()) {
+            emailSender.sendEmail(
+                    testConfig.getMailDestinations(),
+                    testConfig.getMailTitleSucess(),
+                    "Verificação sem Erro. :: Link "
+                            + testConfig.getUrl() + "\n"
+                            + executeScript.getMsgOk());
+        }
+    }
+
+    public void runScriptTest() throws IOException, IllegalArgumentException {
+        if (!errorOnConnect){
+            Boolean sucess = executeScript.execute(result.getStatusCode(), result.getBody());
+            if (sucess != null) {
+                errorOnConnect = !sucess;
+            } else {
+                msgError
+                        .append("Retorno do Script foi nullo")
+                        .append("\n");
+            }
+        }
+    }
+
+
+    public void execute(String[] args) throws IOException {
 
         if (args.length == 0) {
             log.error("Informe o nome do arquivo de parâmetros.");
             return;
         }
 
-        TestHttpServerConfigure testConfig = new TestHttpServerConfigure(args[0]);
+        log.debug("Iniciando a aplicação.");
+
+        testConfig = new TestHttpServerConfigure(args[0]);
         log.info("Arquivo de configurações: {} carregado.", args[0]);
 
+        executeScript = new ExecutorTest(testConfig.getScriptTest());
+        log.info("Script: {} carregado.", testConfig.getScriptTest());
 
-        HttpRequester request = new HttpRequester();
-        HttpResponseResult result = null;
-        Boolean errorOnConnect = null;
-        StringBuilder msgError = new StringBuilder();
+        executeHttpRequest();
+        log.info("Http request executado");
 
-        try {
-            result = request.sendGet(testConfig.getUrl());
-            if (result != null && result.getStatusCode() / 100 == 2 && result.getBody().length() > 500) {
-                errorOnConnect = false;
-            } else {
-                msgError.append("Retornou o resultado nullo\n");
-                errorOnConnect = true;
-            }
-        } catch (UnresolvedAddressException ure) {
-            errorOnConnect = true;
-            String tmp = "Nome do servidor " + testConfig.getUrl() + " nao definido: ";
-
-            msgError
-                    .append(tmp)
-                    .append(ure.toString())
-                    .append("\n");
-
-            log.error(tmp, ure);
-        } catch (ConnectException ce) {
-            errorOnConnect = true;
-            String tmp = "Erro ao conectar com o servidor " + testConfig.getUrl() + " requisição HTTP: ";
-            msgError
-                    .append(tmp)
-                    .append(ce.toString())
-                    .append("\n");
-            log.error(tmp, ce);
-        } catch (Exception e) {
-            String tmp = "Erro ao enviar requisição HTTP (Geral) ";
-            errorOnConnect = true;
-            msgError
-                    .append(tmp)
-                    .append(e.toString())
-                    .append("\n");
-            log.error(tmp, e);
-        }
+        runScriptTest();
+        log.info("Script executado");
 
         log.debug("Retorno da solicitação {} com o resultado {}", testConfig.getUrl(), result != null ? result.toString() : "<<sem retorno>>");
 
-        EmailSender emailSender = new EmailSender(testConfig.getMailHost(), testConfig.getMailPort(), testConfig.getMailUsername(), testConfig.getMailPassword());
-
-        if (errorOnConnect) {
-            emailSender.sendEmail(
-                    testConfig.getMailDestinations(),
-                    testConfig.getMailTitleFailure(),
-                    "Ocorreu um erro ao conectar com o endereço: " +
-                            testConfig.getUrl() + " verifique\n" + msgError.toString() + "\n");
-        } else if (testConfig.getSendWithoutError()) {
-            emailSender.sendEmail(
-                    testConfig.getMailDestinations(),
-                    testConfig.getMailTitleSucess(),
-                    "Verificação sem Erro. :: Link " + testConfig.getUrl());
-        }
+        sendMail();
+        log.info("Email enviado");
     }
 }

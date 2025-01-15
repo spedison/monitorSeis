@@ -11,7 +11,7 @@ public class HttpRequester {
 
     private HttpClient client = HttpClient.newHttpClient();
 
-    public HttpResponseResult sendGet(String url) throws IOException, InterruptedException, IOException {
+    public HttpResponseResult sendGet(String url) throws InterruptedException, IOException {
         return executeRequest(url, "", "GET");
     }
 

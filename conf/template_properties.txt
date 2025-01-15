@@ -1,3 +1,4 @@
+tipo = http (se os testes são usando http ou ssh)
 url = link para analisar
 mail.host = smtp.gmail.com
 mail.port = 587
@@ -6,4 +7,5 @@ mail.password = senha usuario do e-mail
 mail.send_without_error = true
 mail.title_sucess = Titulo do teste de Sucesso.
 mail.title_failure = Titulo do teste de Falha
-mail.destinations = mail1@tre-sp.jus.br,mail2@mail.com,mail3...
+mail.destinations = mail1@gov.br,mail2@mail.com,mail3...
+script.test = Script usado para testar os dados do site. O padrao é enviado no projeto com StartGroovyScript.groovy. Colocar caminho completo.

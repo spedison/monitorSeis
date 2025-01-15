@@ -19,9 +19,13 @@
         </encoder>
     </appender>
 
+    <logger name="br.jus.tre_sp.Main" level="TRACE" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
     <!-- Configuração de nível de logs -->
-    <root level="info">
-        <appender-ref ref="CONSOLE" />
+    <root level="ERROR">
+        <appender-ref ref="CONSOLE"   />
         <appender-ref ref="FILE" />
     </root>
 

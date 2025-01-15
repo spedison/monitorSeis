@@ -40,6 +40,7 @@ public class ExecutorTest {
 
             if (ret != null) {
                 if (ret instanceof Map) {
+                    @SuppressWarnings("unchecked")
                     Map<String, Object> map = (Map<String, Object>) ret;
                     this.msgErrors = (String) map.getOrDefault("msgErro", "");
                     this.msgOk = (String) map.getOrDefault("msgOk", "");

@@ -46,6 +46,39 @@ application {
     mainClass = 'br.jus.tre_sp.Main'
 }
 
+tasks.withType(JavaCompile) {
+    options.compilerArgs += ['-Xlint:unchecked'] // Adiciona o parâmetro -Xlint:unchecked
+    options.encoding = 'UTF-8'
+}
+
+tasks.jar {
+    manifest {
+        attributes(
+                'Main-Class': application.mainClass,
+                'Class-Path': configurations.runtimeClasspath.files.collect { "lib/${it.name}" }.join(' ')
+        )
+    }
+}
+
+tasks.register('buildLibs', Copy) {
+    description = 'Copia todas as dependências para o diretório lib'
+    group = 'build'
+
+    from configurations.runtimeClasspath // Dependências em tempo de execução
+    into "$buildDir/libs/lib"            // Diretório de saída das libs
+}
+
+tasks.register('customDist') {
+    description = 'Gera o JAR do projeto e um diretório lib contendo as dependências'
+    group = 'build'
+
+    dependsOn(jar)   // Garante que o JAR principal será construído
+    dependsOn(buildLibs) // Garante que as dependências serão copiadas
+}
+
+
 test {
     useJUnitPlatform()
 }
+
+defaultTasks 'customDist'
